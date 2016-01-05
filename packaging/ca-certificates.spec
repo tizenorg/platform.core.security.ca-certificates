@@ -11,6 +11,7 @@ BuildRequires:  openssl
 BuildRequires:  pkgconfig(libtzplatform-config)
 BuildRequires:  cmake
 BuildRequires:  findutils
+Requires: filesystem
 
 %description
 Utilities for system wide CA certificate installation
