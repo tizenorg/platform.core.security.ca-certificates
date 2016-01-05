@@ -4,8 +4,9 @@ Version:        1
 Release:        0
 License:        Apache-2.0
 Group:          Security/Certificate Management
-Source0:        %{name}-${version}.tar.gz
+Source0:        %{name}-%{version}.tar.gz
 Source1001:     %{name}.manifest
+BuildArch:      noarch
 BuildRequires:  openssl
 BuildRequires:  pkgconfig(libtzplatform-config)
 BuildRequires:  cmake
