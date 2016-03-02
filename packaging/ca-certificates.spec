@@ -26,13 +26,13 @@ Requires: %name = %version-%release
 ca-certificates devel package which contains RPM macros
 for ca-bundle and ssl certs directory
 
-%define ssletcdir   %{TZ_SYS_ETC}/ssl
-%define usrcadir    %{TZ_SYS_SHARE}/ca-certificates/certs
+%define ssletcdir   %{TZ_SYS_RO_ETC}/ssl
+%define usrcadir    %{TZ_SYS_RO_SHARE}/ca-certificates/certs
 %define etccadir    %{ssletcdir}/certs
 %define cabundledir /var/lib/ca-certificates
 %define cabundle    %{cabundledir}/ca-bundle.pem
 %define etccabundle %{ssletcdir}/ca-bundle.pem
-%define macro_ca_certificates %{TZ_SYS_ETC}/rpm/macros.ca-certificates
+%define macro_ca_certificates %{TZ_SYS_RO_ETC}/rpm/macros.ca-certificates
 
 %prep
 %setup
@@ -57,7 +57,7 @@ done
 
 ln -sf %{cabundle} %{buildroot}%{etccabundle}
 
-mkdir -p %{buildroot}%{_sysconfdir}/rpm
+mkdir -p %{buildroot}%{TZ_SYS_RO_ETC}/rpm
 
 touch %{buildroot}%{macro_ca_certificates}
 echo "%TZ_SYS_CA_CERTS      %{etccadir}"    >> %{buildroot}%{macro_ca_certificates}
