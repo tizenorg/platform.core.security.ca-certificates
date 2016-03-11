@@ -5,7 +5,6 @@ Release:        0
 License:        Apache-2.0
 Group:          Security/Certificate Management
 Source0:        %{name}-%{version}.tar.gz
-Source1001:     %{name}.manifest
 BuildArch:      noarch
 BuildRequires:  openssl
 BuildRequires:  pkgconfig(libtzplatform-config)
@@ -26,59 +25,81 @@ Requires: %name = %version-%release
 ca-certificates devel package which contains RPM macros
 for ca-bundle and ssl certs directory
 
-%define etcdir      %{?TZ_SYS_RO_ETC:%TZ_SYS_RO_ETC/}%{!?TZ_SYS_RO_ETC:/etc/}
-%define ssletcdir   %{etcdir}ssl
-%define usrdir      %{?TZ_SYS_RO_SHARE:%TZ_SYS_RO_SHARE/}%{!?TZ_SYS_RO_SHARE:/usr/share/}
-%define usrcadir    %{usrdir}ca-certificates/certs
-%define etccadir    %{ssletcdir}/certs
-%define cabundledir /var/lib/ca-certificates
-%define cabundle    %{cabundledir}/ca-bundle.pem
-%define etccabundle %{ssletcdir}/ca-bundle.pem
-%define macro_ca_certificates %{etcdir}/rpm/macros.ca-certificates
+# prefix macro
+%define etc_dir     %{?TZ_SYS_ETC:%TZ_SYS_ETC}%{!?TZ_SYS_ETC:/opt/etc}
+%define ro_etc_dir  %{?TZ_SYS_RO_ETC:%TZ_SYS_RO_ETC}%{!?TZ_SYS_RO_ETC:/etc}
+%define ssl_dir     %{etc_dir}/ssl
+%define ro_ssl_dir  %{ro_etc_dir}/ssl
+%define ro_data_dir %{?TZ_SYS_RO_SHARE:%TZ_SYS_RO_SHARE}%{!?TZ_SYS_RO_SHARE:%_datadir}
+
+# CA certs macro
+%define ro_ca_certs_orig_dir %{ro_data_dir}/ca-certificates/certs
+%define ro_ca_certs_dir      %{ro_ssl_dir}/certs
+%define ca_certs_dir         %{ssl_dir}/certs
+
+# CA bundle macro
+%define ca_bundle_dir /var/lib/ca-certificates
+%define ca_bundle     %{ca_bundle_dir}/ca-bundle.pem
+%define ro_ca_bundle  %{ro_ssl_dir}/ca-bundle.pem
+
+%define macro_ca_certificates %{ro_etc_dir}/rpm/macros.ca-certificates
 
 %prep
-%setup
-cp %{SOURCE1001} .
+%setup -q
 
 %build
-%cmake .
-
+%cmake . -DVERSION=%version \
+         -DTZ_SYS_CA_CERTS=%ca_certs_dir \
+         -DTZ_SYS_CA_BUNDLE=%ca_bundle \
+ 
 %install
-mkdir -p %{buildroot}%{usrcadir}
-mkdir -p %{buildroot}%{etccadir}
-mkdir -p %{buildroot}%{cabundledir}
 
-cp -rf certs/* %{buildroot}%{usrcadir}
+# devel macro
+mkdir -p %{buildroot}%{ro_etc_dir}/rpm
+touch %{buildroot}%{macro_ca_certificates}
+echo "%TZ_SYS_RO_CA_CERTS_ORIG %{ro_ca_certs_orig_dir}" >> %{buildroot}%{macro_ca_certificates}
+echo "%TZ_SYS_RO_CA_CERTS      %{ro_ca_certs_dir}"      >> %{buildroot}%{macro_ca_certificates}
+echo "%TZ_SYS_CA_CERTS         %{ca_certs_dir}"      >> %{buildroot}%{macro_ca_certificates}
+echo "%TZ_SYS_RO_CA_BUNDLE     %{ro_ca_bundle}"         >> %{buildroot}%{macro_ca_certificates}
+echo "%TZ_SYS_CA_BUNDLE        %{ca_bundle}"            >> %{buildroot}%{macro_ca_certificates}
 
-%make_install
+# generate original CA certificates 
+mkdir -p %{buildroot}%{ro_ca_certs_orig_dir}
+cp -rf certs/* %{buildroot}%{ro_ca_certs_orig_dir}
 
-for cert in %{buildroot}%{usrcadir}/*
+# link files : for certs RW area  
+mkdir -p %{buildroot}%{ca_certs_dir}
+for cert in %{buildroot}%{ro_ca_certs_orig_dir}/*
 do
-    ln -sf %{usrcadir}/${cert/*\//} %{buildroot}%{etccadir}
+    ln -sf %{ro_ca_certs_orig_dir}/${cert/*\//} %{buildroot}%{ca_certs_dir}
 done
 
-ln -sf %{cabundle} %{buildroot}%{etccabundle}
+# generate original CA bundle
+mkdir -p %{buildroot}%{ca_bundle_dir}
+%make_install
 
-mkdir -p %{buildroot}%{etcdir}rpm
+%post
+# link directory : for sync certs RW area with RO area
+mkdir -p %{ro_ssl_dir}
+ln -sf %{ca_certs_dir} %{ro_ca_certs_dir}
 
-touch %{buildroot}%{macro_ca_certificates}
-echo "%TZ_SYS_CA_CERTS      %{etccadir}"    >> %{buildroot}%{macro_ca_certificates}
-echo "%TZ_SYS_CA_CERTS_ORIG %{usrcadir}"    >> %{buildroot}%{macro_ca_certificates}
-echo "%TZ_SYS_CA_BUNDLE     %{etccabundle}" >> %{buildroot}%{macro_ca_certificates}
-echo "%TZ_SYS_CA_BUNDLE_RW  %{cabundle}"    >> %{buildroot}%{macro_ca_certificates}
+# link file
+ln -sf %{ca_bundle} %{ro_ca_bundle}
 
 %files
 %defattr(-, root, root)
 %manifest %{name}.manifest
 %license LICENSE
-%dir %{usrcadir}
-%dir %attr(775, root, system) %{etccadir}
-%dir %{cabundledir}
-%dir %{ssletcdir}
-%attr(444, root, root) %{usrcadir}/*
-%attr(777, system, system) %{etccadir}/*
-%attr(664, root, system) %{cabundle}
-%attr(777, root, root) %{etccabundle}
+%dir %{ssl_dir}
+# original CA Certificates
+%dir %{ro_ca_certs_orig_dir} 
+%attr(444, root, root) %{ro_ca_certs_orig_dir}/*
+# symbol Certificates
+%dir %{ca_certs_dir}
+%attr(777, system, system) %{ca_certs_dir}/*
+# original CA bundle
+%dir %{ca_bundle_dir}
+%attr(664, root, system) %{ca_bundle}
 
 %files devel
 %config %{macro_ca_certificates}
