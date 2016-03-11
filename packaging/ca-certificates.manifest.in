@@ -1,0 +1,10 @@
+<manifest>
+	<request>
+		<domain name="_"/>
+	</request>
+	<assign>
+		<filesystem path="@TZ_SYS_CA_CERTS@" label="System::Shared" type="transmutable" />
+		<filesystem path="@TZ_SYS_CA_CERTS@/*" label="System::Shared" />
+		<filesystem path="@TZ_SYS_CA_BUNDLE@" label="System::Shared" />
+	</assign>
+</manifest>
