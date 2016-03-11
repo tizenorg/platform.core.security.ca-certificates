@@ -20,3 +20,5 @@ INSTALL(FILES
 	${PATH_CRT_FILE}
 	DESTINATION /var/lib/ca-certificates
 )
+
+CONFIGURE_FILE(packaging/ca-certificates.manifest.in ca-certificates.manifest @ONLY)
