@@ -1,6 +1,6 @@
 Summary:        System wide CA certificates resource
 Name:           ca-certificates
-Version:        1
+Version:        0.0.2
 Release:        0
 License:        Apache-2.0
 Group:          Security/Certificate Management
