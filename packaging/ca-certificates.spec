@@ -11,6 +11,7 @@ BuildRequires:  pkgconfig(libtzplatform-config)
 BuildRequires:  cmake
 BuildRequires:  findutils
 Requires: filesystem
+Requires: security-config
 
 %description
 Utilities for system wide CA certificate installation
@@ -95,12 +96,12 @@ ln -sf %{ca_bundle} %{buildroot}%{ro_ca_bundle}
 # symbol Certificates : R0 area
 %dir %{ro_ca_certs_dir}
 # symbol Certificates : RW area
-%attr(775, system, system) %{ca_certs_dir}
+%attr(775, security_fw, security_fw) %{ca_certs_dir}
 # original CA bundle
 %dir %{ca_bundle_dir}
-%attr(664, root, system) %{ca_bundle}
+%attr(664, root, security_fw) %{ca_bundle}
 # symbol CA bundle
-%attr(664, root, system) %{ro_ca_bundle}
+%attr(664, root, security_fw) %{ro_ca_bundle}
 
 %files devel
 %config %{macro_ca_certificates}
